@@ -1,0 +1,28 @@
+ubuntu WSL
+  concurrency: 128, request/sec: 141341.68, transfer/sec: 18.736MiB
+  concurrency: 256, request/sec: 140416.19, transfer/sec: 18.614MiB
+  concurrency: 480, request/sec: 132151.34, transfer/sec: 17.518MiB
+  concurrency: 128, request/sec: 272463.23, transfer/sec: 36.118MiB, pipeline: 16
+  concurrency: 256, request/sec: 280662.69, transfer/sec: 37.205MiB, pipeline: 16
+  concurrency: 480, request/sec: 285996.49, transfer/sec: 37.912MiB, pipeline: 16
+Native Windows
+  concurrency: 128, request/sec: 170270.96, transfer/sec: 22.571MiB
+  concurrency: 256, request/sec: 161825.13, transfer/sec: 21.452MiB
+  concurrency: 480, request/sec: 159802.35, transfer/sec: 21.184MiB
+  concurrency: 128, request/sec: 259142.56, transfer/sec: 34.352MiB, pipeline: 16
+  concurrency: 256, request/sec: 241377.87, transfer/sec: 31.997MiB, pipeline: 16
+  concurrency: 480, request/sec: 237046.75, transfer/sec: 31.423MiB, pipeline: 16
+Ubuntu Virtualbox
+  concurrency: 128, request/sec: 112081.24, transfer/sec: 14.858MiB
+  concurrency: 256, request/sec: 102612.86, transfer/sec: 13.602MiB
+  concurrency: 480, request/sec: 95914.11, transfer/sec: 12.714MiB
+  concurrency: 128, request/sec: 387480.92, transfer/sec: 51.365MiB, pipeline: 16
+  concurrency: 256, request/sec: 384479.53, transfer/sec: 50.967MiB, pipeline: 16
+  concurrency: 480, request/sec: 301675.06, transfer/sec: 39.99MiB, pipeline: 16
+docker container ubuntu virtualbox
+  concurrency: 128, request/sec: 158730.41, transfer/sec: 21.041MiB
+  concurrency: 256, request/sec: 140928.06, transfer/sec: 18.682MiB
+  concurrency: 480, request/sec: 131645.61, transfer/sec: 17.451MiB
+  concurrency: 128, request/sec: 123917.31, transfer/sec: 16.427MiB, pipeline: 16
+  concurrency: 256, request/sec: 70376.04, transfer/sec: 9.329MiB, pipeline: 16
+  concurrency: 480, request/sec: 16434.43, transfer/sec: 2.179MiB, pipeline: 16
