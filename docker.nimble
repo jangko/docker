@@ -10,5 +10,5 @@ skipDirs      = @["benchmark"]
 requires "nim > 0.18.0"
 
 task test, "Run all tests":
-  exec "nim c -r -d:release benchmark/bot all"
+  exec "nim c -d:release benchmark/bot"
   
