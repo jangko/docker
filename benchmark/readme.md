@@ -14,7 +14,7 @@ Participants in this benchmark are:
 * __asyncdispatch__, lang: Nim, from Nim stdlib
 * __actix-raw__, lang: Rust, TFB round 16th rank 1
 * __fasthttp__, lang: Go, TFB round 16th rank 2
-* __ulib-plaintext_fit__, lang: C++, TFB round 16th rank 3
+* __libreactor__, lang: C, TFB round 16th rank 5
 
 Participants from TFB round 16th are impressive, how asyncdispatch2 compared to them? This is the goals of this benchmark.
 The rank of TFB round 16th is based on plaintext category, running on a physical server.

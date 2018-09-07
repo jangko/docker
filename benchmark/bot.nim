@@ -1,7 +1,7 @@
 import osproc, json, streams, strutils, os
 
 const
-  participants = ["mofuw", "asyncnet", "asyncdispatch2", "fasthttp", "actix-raw"]
+  participants = ["mofuw", "asyncnet", "asyncdispatch2", "fasthttp", "actix-raw", "libreactor"]
 
 proc execAndGetJson(command: string): JsonNode =
   const
