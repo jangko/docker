@@ -262,8 +262,9 @@ proc installWrk(forceInstall: bool = false): bool =
   let curDir = parentDir & DirSep & "wrksrc"
   discard existsOrCreateDir(curDir)
   setCurrentDir(curDir)
+  echo "build wrk..."
   if not fileExists(curDir & DirSep & "4.1.0.tar.gz") or forceInstall:
-    result = execCmd("wget https://github.com/wg/wrk/archive/4.1.0.tar.gz") == 0
+    result = execCmd("wget -q https://github.com/wg/wrk/archive/4.1.0.tar.gz") == 0
   if result or forceInstall:
     result = execCmd("tar xzf 4.1.0.tar.gz --strip-components=1 --skip-old-files") == 0
   if result or forceInstall:
