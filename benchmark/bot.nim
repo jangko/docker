@@ -1,7 +1,7 @@
 import osproc, json, streams, strutils, os
 
 const
-  participants = ["mofuw", "asyncnet", "asyncdispatch2", "fasthttp", "actix-raw", "libreactor"]
+  participants = ["fasthttp", "mofuw", "asyncnet", "asyncdispatch2", "libreactor"]
 
 proc execAndGetJson(command: string): JsonNode =
   const
@@ -63,6 +63,32 @@ proc removeContainers() =
     let ID = x["ID"]
     removeContainer(ID.getStr())
 
+proc buildExe(name: string) =
+  let parentDir = getAppDir()
+  let curDir = parentDir & DirSep & name
+  setCurrentDir(curDir)
+  if execCmd("sh build.sh") != 0:
+    raise newException(Exception, "cannot build executable: " & name)
+  setCurrentDir(parentDir)
+
+proc buildExes() =
+  for c in participants:
+    buildExe(c)
+
+proc runServer(id: string): Process =
+  const options = {poParentStreams}
+  let parentDir = getAppDir()
+  let name = parentDir & DirSep & id & DirSep & "server"
+  result = startProcess(name, args=[], env=nil, options=options)
+  if not result.running():
+    raise newException(Exception, "cannot run server: " & id)
+
+proc stopServer(p: Process) =
+  p.terminate()
+  p.kill()
+  discard p.waitForExit(1000)
+  p.close()
+
 const
   levels = [128, 256, 480]
   maxConcurrency = levels[^1]
@@ -72,14 +98,21 @@ const
   pipeline = 16
   accept = "text/plain,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"
 
-proc runTest(name: string): JsonNode =
+proc runTest(name: string, noDocker: bool): JsonNode =
   let maxThreads = countProcessors()
+  var cmd: string
+  var ret: int
+  var server: Process
 
   echo "** ", name, " **"
-  var cmd = "docker run -d -p 8080:8080 bench-$1" % [name]
-  var ret = execSilent(cmd)
-  if ret != 0:
-    raise newException(Exception, "cannot run image: " & name)
+
+  if noDocker:
+    server = runServer(name)
+  else:
+    cmd = "docker run -d -p 8080:8080 bench-$1" % [name]
+    ret = execSilent(cmd)
+    if ret != 0:
+      raise newException(Exception, "cannot run image: " & name & " " & $ret)
 
   cmd = "./wrk -H \"Host: $1\" -H \"Accept: $2\" -H \"Connection: keep-alive\" --latency -d 5 -c 8 --timeout 8 -t 8 $3" %
     [serverHost, accept, url]
@@ -117,8 +150,10 @@ proc runTest(name: string): JsonNode =
       json.add("success", newJBool(false))
       json.add("pipeline", newJInt(0))
       jar.add json
+
   sleep(2000)
   for c in levels:
+    let c = 128
     echo "  Running Concurrency $1 with pipeline $2" % [$c, $pipeline]
     let t = max(c, maxThreads)
     let cmd = "./wrk -H \"Host: $1\" -H \"Accept: $2\" -H \"Connection: keep-alive\" --latency -d $3 -c $4 --timeout 8 -t $5 $6 -s pipeline.lua -- $7" %
@@ -136,9 +171,13 @@ proc runTest(name: string): JsonNode =
       json.add("success", newJBool(false))
       json.add("pipeline", newJInt(pipeline))
       jar.add json
-  sleep(2000)
-  killContainers()
-  removeContainers()
+
+  if noDocker:
+    stopServer(server)
+  else:
+    sleep(2000)
+    killContainers()
+    removeContainers()
 
   result = newJObject()
   result.add("result", jar)
@@ -169,13 +208,16 @@ proc renderResult(json: JsonNode, s: Stream) =
       let concurrency = c["level"].getInt()
       s.writeLine("  concurrency: $1, failed" % [$concurrency])
 
-proc runAllTest() =
-  buildImages()
+proc runAllTest(noDocker: bool) =
+  if noDocker:
+    buildExes()
+  else:
+    buildImages()
 
   var resList = newSeq[JsonNode]()
   for p in participants:
     try:
-      let res = runTest(p)
+      let res = runTest(p, noDocker)
       resList.add res
     except Exception as e:
       echo e.msg
@@ -190,9 +232,13 @@ proc runAllTest() =
     res.renderResult(ss)
   echo ss.data
 
-proc runSingleTest(name: string) =
-  buildImage(name)
-  let res = runTest(name)
+proc runSingleTest(name: string, noDocker: bool) =
+  if noDocker:
+    buildExe(name)
+  else:
+    buildImage(name)
+
+  let res = runTest(name, noDocker)
   var s = newStringStream()
   res.renderResult(s)
   echo s.data
@@ -237,7 +283,8 @@ proc printHelp() =
   for c in participants:
     echo "  ", c
 
-proc runCommand(cmd: string) =
+proc runCommand(cmd, options: string) =
+  var noDocker = options == "nodocker"
   case cmd
   of "clean":
     killContainers()
@@ -247,7 +294,7 @@ proc runCommand(cmd: string) =
     discard installWrk(true)
   of "all":
     discard installWrk()
-    runAllTest()
+    runAllTest(noDocker)
   of "help":
     printHelp()
   else:
@@ -255,12 +302,14 @@ proc runCommand(cmd: string) =
       echo cmd & " is not a registered participant"
       return
     discard installWrk()
-    runSingleTest(cmd)
+    runSingleTest(cmd, noDocker)
 
 proc main() =
   if paramCount() > 0:
     let cmd = paramStr(1)
-    runCommand(cmd)
+    let options = if paramCount() > 1:
+      paramStr(2) else: ""
+    runCommand(cmd, options)
   else:
     printHelp()
 

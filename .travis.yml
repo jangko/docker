@@ -9,4 +9,4 @@ matrix:
       script:
         - docker run statusteam/nim-base nim --version
         - docker run -v "$(pwd):/project" -w /project statusteam/nim-base sh -c "nimble install -dy && nimble test"
-        - benchmark/bot all
+        - benchmark/bot all nodocker

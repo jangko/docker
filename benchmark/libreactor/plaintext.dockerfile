@@ -31,4 +31,4 @@ RUN wget -q https://github.com/fredrikwidlund/libclo/releases/download/v0.1.0/li
 
 RUN make clean && make
 
-CMD ["./libreactor"]
+CMD ["./server"]

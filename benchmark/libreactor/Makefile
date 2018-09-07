@@ -1,5 +1,5 @@
 CC     = gcc-6
-PROG   = libreactor
+PROG   = server
 OBJS   = src/setup.o src/main.o
 CFLAGS = -std=gnu11 -Wall -O3 -march=native -mtune=native -flto -fuse-linker-plugin -Isrc
 LDADD  = -lreactor -ldynamic -lclo
