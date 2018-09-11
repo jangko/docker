@@ -1,7 +1,7 @@
 import osproc, json, streams, strutils, os
 
 const
-  participants = ["fasthttp", "mofuw", "asyncnet", "asyncdispatch2", "libreactor"]
+  participants = ["fasthttp", "mofuw", "asyncnet", "asyncdispatch2", "libreactor", "actix-raw"]
 
 proc execAndGetJson(command: string): JsonNode =
   const
@@ -92,7 +92,11 @@ proc stopServer(p: Process) =
 const
   levels = [128, 256, 480]
   maxConcurrency = levels[^1]
-  duration = 15
+  primer_duration = 5
+  warmup_duration = 10
+  concurrency_duration = 15
+  pipeline_duration = 15
+  sleep_duration = 1000
   serverHost = "bench-bot"
   url = "http://127.0.0.1:8080/plaintext"
   pipeline = 16
@@ -114,29 +118,29 @@ proc runTest(name: string, noDocker: bool): JsonNode =
     if ret != 0:
       raise newException(Exception, "cannot run image: " & name & " " & $ret)
 
-  cmd = "./wrk -H \"Host: $1\" -H \"Accept: $2\" -H \"Connection: keep-alive\" --latency -d 5 -c 8 --timeout 8 -t 8 $3" %
-    [serverHost, accept, url]
+  cmd = "./wrk -H \"Host: $1\" -H \"Accept: $2\" -H \"Connection: keep-alive\" --latency -d $3 -c 8 --timeout 8 -t 8 $4" %
+    [serverHost, accept, $primer_duration, url]
   echo "  Running Primer"
 
   ret = execSilent(cmd)
   if ret != 0:
     raise newException(Exception, "cannot run primer: " & name)
-  sleep(2000)
+  sleep(sleep_duration)
 
   cmd = "./wrk -H \"Host: $1\" -H \"Accept: $2\" -H \"Connection: keep-alive\" --latency -d $3 -c $4 --timeout 8 -t $5 $6" %
-    [serverHost, accept, $duration, $(256), $maxThreads, url]
+    [serverHost, accept, $warmup_duration, $(256), $maxThreads, url]
   echo "  Running Warmup"
   ret = execSilent(cmd)
   if ret != 0:
     raise newException(Exception, "cannot run warmup: " & name)
-  sleep(2000)
+  sleep(sleep_duration)
 
   var jar = newJArray()
   for c in levels:
     echo "  Running Concurrency $1" % [$c]
     let t = max(c, maxThreads)
     let cmd = "./wrk -H \"Host: $1\" -H \"Accept: $2\" -H \"Connection: keep-alive\" --latency -d $3 -c $4 --timeout 8 -t $5 $6 -s jsonfmt.lua" %
-      [serverHost, accept, $duration, $c, $t, url]
+      [serverHost, accept, $concurrency_duration, $c, $t, url]
     let res = execAndGetJson(cmd)
     if res.len == 1:
       var json = res[0]
@@ -151,13 +155,13 @@ proc runTest(name: string, noDocker: bool): JsonNode =
       json.add("pipeline", newJInt(0))
       jar.add json
 
-  sleep(2000)
+  sleep(sleep_duration)
   for c in levels:
     let c = 128
     echo "  Running Concurrency $1 with pipeline $2" % [$c, $pipeline]
     let t = max(c, maxThreads)
     let cmd = "./wrk -H \"Host: $1\" -H \"Accept: $2\" -H \"Connection: keep-alive\" --latency -d $3 -c $4 --timeout 8 -t $5 $6 -s pipeline.lua -- $7" %
-      [serverHost, accept, $duration, $c, $t, url, $pipeline]
+      [serverHost, accept, $pipeline_duration, $c, $t, url, $pipeline]
     let res = execAndGetJson(cmd)
     if res.len == 1:
       var json = res[0]
@@ -175,7 +179,7 @@ proc runTest(name: string, noDocker: bool): JsonNode =
   if noDocker:
     stopServer(server)
   else:
-    sleep(2000)
+    sleep(sleep_duration)
     killContainers()
     removeContainers()
 

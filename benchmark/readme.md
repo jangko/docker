@@ -46,7 +46,6 @@ Each test is executed as follows:
 * Compile and run the benchmark bot `nim c -r bot all`
 * Wait until it finished, and get the result in `tests/benchmark/benchmark_result.txt`
 * You can see all bench-bot command line options with `./bot` or `./bot help`
-* use `./bot framework-name nodocker` or `./bot all nodocker` to build the test without docker.
 
 ## How to add more participants?
 
@@ -54,5 +53,16 @@ Each test is executed as follows:
 * inside that directory prepare a `plaintext.dockerfile` and all necessary source code.
 * add a entry in `bot.nim` participants constant list with the directory name.
 
-## How to switch to multi thread mode?
-You can find a commented line in the source code of each framework to enable/disable multithread
+## Summary
+* __mofuw__, mofuw use asyncdispatch, expected performance should not more than asynchdispatch itself.
+* __asyncdispatch__, although it is slower than asyncdispatch2, it can handle high concurrency quite well.
+* __asyncdispatch2__, at high concurrency it has tendency become slower significantly, 
+  but surpringsingly it is the only framework in this test that can handle non pipeline request faster than other
+  frameworks although using almost identical code with asyncdispatch when handle pipeline request.
+* __actix-raw__, very fast when multi threaded, not so when single threaded.
+* __fasthttp__, very fast when multi threaded, not so when single threaded.
+* __libreactor__, still very fast although in single thread mode.
+
+## Conclusion
+* asyncdispatch2 could be a good candidate to replace asycndispatch
+* it still has room for improvement especially when handle high count connections.
