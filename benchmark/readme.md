@@ -56,9 +56,9 @@ Each test is executed as follows:
 ## Summary
 * __mofuw__, mofuw use asyncdispatch, expected performance should not more than asynchdispatch itself.
 * __asyncdispatch__, although it is slower than asyncdispatch2, it can handle high concurrency quite well.
-* __asyncdispatch2__, at high concurrency it has tendency become slower significantly, 
+* __asyncdispatch2__, at high concurrency it has tendency become slower significantly,
   but surpringsingly it is the only framework in this test that can handle non pipeline request faster than other
-  frameworks although using almost identical code with asyncdispatch when handle pipeline request.
+  frameworks although using almost identical code with asyncdispatch when handle request/response.
 * __actix-raw__, very fast when multi threaded, not so when single threaded.
 * __fasthttp__, very fast when multi threaded, not so when single threaded.
 * __libreactor__, still very fast although in single thread mode.
