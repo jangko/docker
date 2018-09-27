@@ -20,7 +20,7 @@ if [ ! -f server ]; then
   wget -q https://github.com/fredrikwidlund/libreactor/releases/download/v1.0.0/libreactor-1.0.0.tar.gz
   tar xfz libreactor-1.0.0.tar.gz
   cd libreactor-1.0.0
-  sed -i -e 's,REACTOR_POOL_WORKERS_MAX,1,' src/reactor/reactor_pool.c
+  cat ../src/patch.c >> src/reactor/reactor_core.c
   ./configure --prefix=$INSDIR CFLAGS="-I"$INCLUDEDIR LDFLAGS="-L"$LIBDIR
   make
   make install
